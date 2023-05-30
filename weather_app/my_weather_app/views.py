@@ -3,8 +3,7 @@ import requests
 import datetime
 
 def index(request):
-    # API_KEY = open("api_key.txt", "r").read()
-    API_KEY = "0f0541abdd3a9db6a22672fb63474881"
+    API_KEY = open("C:\\_studia\\wather-app-django\\weather_app\\my_weather_app\\api_key.txt", "r").read()
     current_weather_url = "https://api.openweathermap.org/data/2.5/weather?q={}&appid={}"
     forecast_weather_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&exclude=current,minutely,hourly,alerts&appid={}"
 
@@ -33,7 +32,7 @@ def index(request):
 def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url):
     response = requests.get(current_weather_url.format(city, api_key)).json()
     lat, lon = response['coord']['lat'], response['coord']['lon']
-
+    print(api_key)
     forecast_response = requests.get(forecast_url.format(lat, lon, api_key)).json()
 
     weather_data = {
