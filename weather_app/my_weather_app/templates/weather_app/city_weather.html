@@ -1,22 +1,26 @@
 {% if weather_data %}
 <h1>{{weather_data.city}}, {{weather_data.country}}</h1>
 <h2>{{weather_data.temperature}}°C</h2>
+<h3>Humidity: {{weather_data.humidity}}%</h3>
+<h3>Wind: {{weather_data.wind}}m/s</h3>
 <p>{{weather_data.description}}</p>
 <img src="https://openweathermap.org/img/w/{{weather_data.icon}}.png" alt="{{weather_data.description}}">
 {% endif %}
 
 {% if daily_forecasts %}
-<h2>
-    5-Day Forecasts
-</h2>
+<h2>5-Day Forecasts</h2>
 <div class="forecast-container">
     {% for forecast in daily_forecasts %}
-    <div class="'forecast">
+    <div class="forecast">
         <h3>{{forecast.day}}</h3>
-        <p>{{forecast.min_temp}}°C - {{forecast.max_temp}}°C</p>
+        <p>{{forecast.min_temp}}~{{forecast.max_temp}}(°C)</p>
+        <p>Humidity: {{forecast.humidity}}%</p>
+        <p>Wind: {{forecast.wind}}m/s</p>
         <p>{{forecast.description}}</p>
         <img src="https://openweathermap.org/img/w/{{forecast.icon}}.png" alt="{{forecast.description}}">
     </div>
     {% endfor %}
 </div>
+{% else %}
+<div>NIC TU NIE MA</div>
 {% endif %}

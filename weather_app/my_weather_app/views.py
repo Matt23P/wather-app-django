@@ -21,10 +21,11 @@ def index(request):
 
         context = {
             "weather_data1": weather_data1,
-            "daily_forecast1": daily_forecasts1,
+            "daily_forecasts1": daily_forecasts1,
             "weather_data2": weather_data2,
-            "daily_forecast2": daily_forecasts2
+            "daily_forecasts2": daily_forecasts2
         }
+
         return render(request, "weather_app/index.html", context)
     else:
         return render(request, "weather_app/index.html")
@@ -33,7 +34,6 @@ def index(request):
 def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url):
     response = requests.get(current_weather_url.format(city, api_key)).json()
     lat, lon = response['coord']['lat'], response['coord']['lon']
-    print(api_key)
     forecast_response = requests.get(forecast_url.format(lat, lon, api_key)).json()
 
     # print(forecast_response)
@@ -42,6 +42,8 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
         "city": city,
         "country": response['sys']['country'],
         "temperature": round(response['main']['temp'] - 273.15, 2),
+        "humidity": response['main']['humidity'],
+        "wind": response['wind']['speed'],
         "description": response['weather'][0]['description'],
         "icon": response['weather'][0]['icon']
     }
@@ -52,10 +54,10 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
             "day": datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%A"),
             "min_temp": round(daily_data['main']['temp_min'] - 273.15, 2),
             "max_temp": round(daily_data['main']['temp_max'] - 273.15, 2),
+            "humidity": daily_data['main']['humidity'],
+            "wind": daily_data['wind']['speed'],
             "description": daily_data['weather'][0]['description'],
             "icon": daily_data['weather'][0]['icon']
         })
-    
-    print(daily_forecasts)
 
     return weather_data, daily_forecasts
