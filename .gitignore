@@ -1,10 +1,8 @@
-api_key.txt
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+weather_app/my_weather_app/api_key.txt
 # C extensions
 *.so
 
