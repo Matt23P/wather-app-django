@@ -3,10 +3,22 @@ import requests
 import datetime
 import plotly.express as px
 
+class CustomTimeZone(datetime.tzinfo):
+    def __init__(self, offset):
+        self.offset = offset
+
+    def utcoffset(self, dt):
+        return datetime.timedelta(seconds=self.offset)
+
+    def dst(self, dt):
+        return datetime.timedelta(0)
+
+    def tzname(self, dt):
+        return f"UTC{self.offset}"
+
 def index(request):
     API_KEY = open("C:\\_studia\\wather-app-django\\weather_app\\my_weather_app\\api_key.txt", "r").read()
     current_weather_url = "https://api.openweathermap.org/data/2.5/weather?q={}&appid={}"
-    # forecast_weather_url = "https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&exclude=current,minutely,hourly,alerts&appid={}"
     forecast_weather_url = "https://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
 
     if request.method == "POST": 
@@ -38,8 +50,6 @@ def index(request):
         else:
             weather_data2, daily_forecasts2, temp_plot_data2, plot_div2 = None, None, None, None
 
-        
-
         context = {
             "weather_data1": weather_data1,
             "daily_forecasts1": daily_forecasts1,
@@ -59,7 +69,11 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
     lat, lon = response['coord']['lat'], response['coord']['lon']
     forecast_response = requests.get(forecast_url.format(lat, lon, api_key)).json()
 
-    # print(forecast_response)
+    time_zone = CustomTimeZone(forecast_response['city']['timezone'])
+
+    dt = datetime.datetime.fromtimestamp(response['dt'], tz=time_zone)
+    tz_day = dt.strftime("%A")
+    tz_time = dt.strftime("%H:%M") 
 
     weather_data = {
         "city": city,
@@ -68,13 +82,18 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
         "humidity": response['main']['humidity'],
         "wind": response['wind']['speed'],
         "description": response['weather'][0]['description'],
-        "icon": response['weather'][0]['icon']
+        "icon": response['weather'][0]['icon'],
+        "time": tz_day + ' ' + tz_time
     }
 
     daily_forecasts = []
-    for daily_data in forecast_response['list'][:5]: #['list'] 
+    for daily_data in forecast_response['list'][:5]: 
+        day = datetime.datetime.fromtimestamp(daily_data['dt'], tz=time_zone)
+        formatted_day = day.strftime("%A")
+        formatted_time = day.strftime("%H:%M")
+        
         daily_forecasts.append({
-            "day": datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%A") + " " + datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%H:%M"),
+            "day": formatted_day + " " + formatted_time,
             "min_temp": round(daily_data['main']['temp_min'] - 273.15, 2),
             "max_temp": round(daily_data['main']['temp_max'] - 273.15, 2),
             "humidity": daily_data['main']['humidity'],
@@ -85,11 +104,13 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
 
     forecast_temp = []
     for daily in forecast_response['list'][:5]:
+        day = datetime.datetime.fromtimestamp(daily['dt'], tz=time_zone)
+        formatted_day = day.strftime("%A")
+        formatted_time = day.strftime("%H:%M")
+
         forecast_temp.append({
-            "day": datetime.datetime.fromtimestamp(daily['dt']).strftime("%A") + " " + datetime.datetime.fromtimestamp(daily['dt']).strftime("%H:%M"),
+            "day": formatted_day + " " + formatted_time,
             "temp": round(daily['main']['temp'] - 273.15, 2),
         })
-
-    print(forecast_temp)
 
     return weather_data, daily_forecasts, forecast_temp
