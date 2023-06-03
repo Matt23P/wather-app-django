@@ -19,12 +19,12 @@
     <div class="comparison-container">
         {% if weather_data1 %}
         <div class="city-container">
-        {% include 'weather_app/city_weather.html' with weather_data=weather_data1 daily_forecasts=daily_forecasts1 %}
+        {% include 'weather_app/city_weather.html' with weather_data=weather_data1 daily_forecasts=daily_forecasts1 temp_plot=plot1 %}
         </div>
         {% endif %}
         {% if weather_data2 %}
         <div class="city-container">
-        {% include 'weather_app/city_weather.html' with weather_data=weather_data2 daily_forecasts=daily_forecasts2 %}
+        {% include 'weather_app/city_weather.html' with weather_data=weather_data2 daily_forecasts=daily_forecasts2 temp_plot=plot2 %}
         </div>
         {% endif %}
     </div>

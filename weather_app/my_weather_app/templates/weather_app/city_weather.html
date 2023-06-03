@@ -8,7 +8,7 @@
 {% endif %}
 
 {% if daily_forecasts %}
-<h2>5-Day Forecasts</h2>
+<h2>Forecast</h2>
 <div class="forecast-container">
     {% for forecast in daily_forecasts %}
     <div class="forecast">
@@ -21,6 +21,10 @@
     </div>
     {% endfor %}
 </div>
-{% else %}
-<div>NIC TU NIE MA</div>
+{% endif %}
+
+{% if temp_plot %}
+<div class="forecast-plot-container">
+    <div class="forecase-plot">{{ temp_plot|safe }}</div>
+</div>
 {% endif %}

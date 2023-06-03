@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import requests
 import datetime
+import plotly.express as px
 
 def index(request):
     API_KEY = open("C:\\_studia\\wather-app-django\\weather_app\\my_weather_app\\api_key.txt", "r").read()
@@ -12,18 +13,40 @@ def index(request):
         city1 = request.POST['city1']
         city2 = request.POST.get('city2', None)
 
-        weather_data1, daily_forecasts1 = fetch_weather_and_forecast(city1, API_KEY, current_weather_url, forecast_weather_url)
+        weather_data1, daily_forecasts1, temp_plot_data1 = fetch_weather_and_forecast(city1, API_KEY, current_weather_url, forecast_weather_url)
+
+        fig1 = px.line(
+            temp_plot_data1,
+            x='day',
+            y='temp',
+            title='Forecast plot for ' + weather_data1['city'] + ', ' + weather_data1['country'],
+            labels={'day':'Date','temp':'Temperature °C'}
+        )
+        plot_div1 = fig1.to_html(full_html=False)
 
         if city2:
-            weather_data2, daily_forecasts2 = fetch_weather_and_forecast(city2, API_KEY, current_weather_url, forecast_weather_url)
+            weather_data2, daily_forecasts2, temp_plot_data2 = fetch_weather_and_forecast(city2, API_KEY, current_weather_url, forecast_weather_url)
+            
+            fig2 = px.line(
+            temp_plot_data2,
+            x='day',
+            y='temp',
+            title='Forecast plot for ' + weather_data2['city'] + ', ' + weather_data2['country'],
+            labels={'day':'Date','temp':'Temperature °C'}
+        )
+            plot_div2 = fig2.to_html(full_html=False)
         else:
-            weather_data2, daily_forecasts2 = None, None
+            weather_data2, daily_forecasts2, temp_plot_data2, plot_div2 = None, None, None, None
+
+        
 
         context = {
             "weather_data1": weather_data1,
             "daily_forecasts1": daily_forecasts1,
             "weather_data2": weather_data2,
-            "daily_forecasts2": daily_forecasts2
+            "daily_forecasts2": daily_forecasts2,
+            "plot1": plot_div1,
+            "plot2": plot_div2
         }
 
         return render(request, "weather_app/index.html", context)
@@ -51,7 +74,7 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
     daily_forecasts = []
     for daily_data in forecast_response['list'][:5]: #['list'] 
         daily_forecasts.append({
-            "day": datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%A"),
+            "day": datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%A") + " " + datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%H:%M"),
             "min_temp": round(daily_data['main']['temp_min'] - 273.15, 2),
             "max_temp": round(daily_data['main']['temp_max'] - 273.15, 2),
             "humidity": daily_data['main']['humidity'],
@@ -60,4 +83,13 @@ def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url)
             "icon": daily_data['weather'][0]['icon']
         })
 
-    return weather_data, daily_forecasts
+    forecast_temp = []
+    for daily in forecast_response['list'][:5]:
+        forecast_temp.append({
+            "day": datetime.datetime.fromtimestamp(daily['dt']).strftime("%A") + " " + datetime.datetime.fromtimestamp(daily['dt']).strftime("%H:%M"),
+            "temp": round(daily['main']['temp'] - 273.15, 2),
+        })
+
+    print(forecast_temp)
+
+    return weather_data, daily_forecasts, forecast_temp
