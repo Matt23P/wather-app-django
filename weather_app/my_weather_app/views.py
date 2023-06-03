@@ -21,48 +21,56 @@ def index(request):
     current_weather_url = "https://api.openweathermap.org/data/2.5/weather?q={}&appid={}"
     forecast_weather_url = "https://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
 
-    if request.method == "POST": 
-        city1 = request.POST['city1']
-        city2 = request.POST.get('city2', None)
+    try:
+        if request.method == "POST": 
+            city1 = request.POST['city1']
+            city2 = request.POST.get('city2', None)
 
-        weather_data1, daily_forecasts1, temp_plot_data1 = fetch_weather_and_forecast(city1, API_KEY, current_weather_url, forecast_weather_url)
+            weather_data1, daily_forecasts1, temp_plot_data1 = fetch_weather_and_forecast(city1, API_KEY, current_weather_url, forecast_weather_url)
 
-        fig1 = px.line(
-            temp_plot_data1,
-            x='day',
-            y='temp',
-            title='Forecast plot for ' + weather_data1['city'] + ', ' + weather_data1['country'],
-            labels={'day':'Date','temp':'Temperature °C'}
-        )
-        plot_div1 = fig1.to_html(full_html=False)
+            fig1 = px.line(
+                temp_plot_data1,
+                x='day',
+                y='temp',
+                title='Forecast plot for ' + weather_data1['city'] + ', ' + weather_data1['country'],
+                labels={'day':'Date','temp':'Temperature °C'}
+            )
+            plot_div1 = fig1.to_html(full_html=False)
 
-        if city2:
-            weather_data2, daily_forecasts2, temp_plot_data2 = fetch_weather_and_forecast(city2, API_KEY, current_weather_url, forecast_weather_url)
-            
-            fig2 = px.line(
-            temp_plot_data2,
-            x='day',
-            y='temp',
-            title='Forecast plot for ' + weather_data2['city'] + ', ' + weather_data2['country'],
-            labels={'day':'Date','temp':'Temperature °C'}
-        )
-            plot_div2 = fig2.to_html(full_html=False)
+            if city2:
+                weather_data2, daily_forecasts2, temp_plot_data2 = fetch_weather_and_forecast(city2, API_KEY, current_weather_url, forecast_weather_url)
+                
+                fig2 = px.line(
+                temp_plot_data2,
+                x='day',
+                y='temp',
+                title='Forecast plot for ' + weather_data2['city'] + ', ' + weather_data2['country'],
+                labels={'day':'Date','temp':'Temperature °C'}
+            )
+                plot_div2 = fig2.to_html(full_html=False)
+            else:
+                weather_data2, daily_forecasts2, temp_plot_data2, plot_div2 = None, None, None, None
+
+            context = {
+                "weather_data1": weather_data1,
+                "daily_forecasts1": daily_forecasts1,
+                "weather_data2": weather_data2,
+                "daily_forecasts2": daily_forecasts2,
+                "plot1": plot_div1,
+                "plot2": plot_div2
+            }
+
+            return render(request, "weather_app/index.html", context)
         else:
-            weather_data2, daily_forecasts2, temp_plot_data2, plot_div2 = None, None, None, None
-
-        context = {
-            "weather_data1": weather_data1,
-            "daily_forecasts1": daily_forecasts1,
-            "weather_data2": weather_data2,
-            "daily_forecasts2": daily_forecasts2,
-            "plot1": plot_div1,
-            "plot2": plot_div2
-        }
-
-        return render(request, "weather_app/index.html", context)
-    else:
-        return render(request, "weather_app/index.html")
+            return render(request, "weather_app/index.html")
     
+    except KeyError:
+        error_message = "Nie znaleziono miasta w bazie API."
+        return render(request, "weather_app/error.html", {'error_message': error_message})
+
+    except requests.exceptions.RequestException as e:
+        error_message = "Wystąpił błąd podczas żądania: {}".format(e)
+        return render(request, "weather_app/error.html", {'error_message': error_message})
 
 def fetch_weather_and_forecast(city, api_key, current_weather_url, forecast_url):
     response = requests.get(current_weather_url.format(city, api_key)).json()
